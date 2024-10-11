@@ -1,0 +1,79 @@
+
+# Metamath to Follow 
+
+Transform metamath database to follow language.
+
+Generate the database:
+
+```
+python -m src.translator -s ./set.mm/set.mm -o ./follow/set.mm/
+```
+
+This command will cost about 3 hours. It will generate two forders:
+
+- `follow/set.mm/code`(425M): the data in follow language format.
+- `follow/set.mm/json`(6.3G): the data in json format.
+
+## Code Folder Introduction
+
+- `content.follow.json`: stores file list of all follow files.
+- `[name].fol`: stores the code of `[name]` block.
+
+## Follow Folder Introduction
+
+- `content.follow.json`: store file list of all json files.
+- `[name].json`: stores the imformation of `[name]` block, which can be used for training.
+
+### Block `type` 
+
+```json
+{
+    "type": "type",
+    "label": <LABEL>
+}
+```
+
+### Block `term` 
+
+```json
+{
+    "type": "term",
+    "label": <LABEL>,
+    "type": <TYPE>,
+    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "stmt": <STMT SEQUENCE>
+}
+```
+
+### Block `axiom` 
+
+```json
+{
+    "type": "axiom",
+    "label": <LABEL>,
+    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "target": <STMT SEQUENCE>,
+    "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
+    "dvs": [(<V1>, <V2>), (<V3>, <V4>), ...],
+}
+```
+
+### Block `thm`
+
+```json
+{
+    "type": "thm",
+    "label": <LABEL>,
+    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "target": <STMT SEQUENCE>,
+    "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
+    "dvs": [(<V>, <V>), (<V>, <V>), ...],
+    "states": [<STATE>, <STATE>, ...],
+    "actions": [ <ACTION>, <ACTION>, ...],
+    "operators": [ <OP>, <OP>, ...]
+}
+```
+
+- `<STATE>` is combined with target statements and diff statements.
+- `<ACTION>` is combined with target statements, assumptions and diff statements.
+- `<OP>` is a function call of axiom or theorem.

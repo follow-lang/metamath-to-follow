@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "metamath-to-follow"
+version = "0.0.1"
+description = "A tool translates metamath to follow."
+authors = ["penglingwei <penglingwei@zju.edu.cn>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "metamath_to_follow"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+lark = "^1.2.2"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# 启用对未使用导入的检查
+select = ["F401", "I001"]
+# 自动修复（包括排序导入）
+fix = true

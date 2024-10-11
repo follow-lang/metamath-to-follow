@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# Build metamath executable, extract related files, and install the executable.
+# This assumes the needed files are downloaded, see download-metamath
+# The executable is installed in $prefix/bin; default $prefix is $HOME
+
+set -e -v
+
+fail () {
+  printf '%s\n' "$1"
+  exit 1
+}
+
+test -f metamath-program.zip || fail 'Cannot find metamath-program.zip'
+
+# Unzip the .zip file; put all its contents into directory "./metamath/".
+# We handle this specially, because GitHub inserts a top-level directory
+# that varies by commit number, and we want to just use "metamath/" as the
+# top directory instead.
+rm -fr metamath-temp/
+mkdir -p metamath/ metamath-temp/
+# Erase subdirectories to ensure it's clean.
+find metamath -type d -mindepth 1 -exec rm -fr {} \+
+unzip -o -d metamath-temp/ metamath-program.zip
+mv -f metamath-temp/*/* metamath/
+
+cd metamath/
+
+# Compile metamath, a C verifier (and more) of metamath files by Norm Megill.
+# We could just run "gcc *.c -O2 -o metamath", but this will do some
+# auto-detection to try to find the best available options.
+autoreconf -i
+./configure
+
+# Make Metamath executable
+make
+
+# install metamath to $prefix/bin (by default, $HOME/bin); this honors DESTDIR:
+my_bindir="${prefix:-"$HOME"}/${bindir:-bin}/"
+mkdir -p "$my_bindir"
+cp -p src/metamath "${my_bindir}"
+
+cd ../
