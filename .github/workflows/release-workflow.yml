@@ -1,0 +1,59 @@
+name: Generate, Upload, and Release Dataset
+
+on:
+  push:
+    tags:
+      - 'v*'  # 触发条件：每次推送带 v* 格式的标签时触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.6'  # 使用适当的 Python 版本
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo 'export PATH="$HOME/.local/bin:$PATH"' >> $GITHUB_ENV  # 添加 Poetry 到 PATH 环境变量
+
+      - name: Install dependencies with Poetry
+        run: |
+          poetry install  # 安装依赖
+
+      - name: Generate Dataset
+        run: |
+          poetry run python -m src.translator -s ./set.mm/set.mm -o ./follow/set.mm/
+
+      - name: Compress Dataset And Upload to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}  # 从 GitHub Secrets 获取 Hugging Face token
+        run: |
+          poetry run python -m src.upload -s ./follow/set.mm -d Follow-Lang/set.mm
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload ZIP file to GitHub Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./follow/set.mm.zip  # 根据实际生成的压缩包路径
+          asset_name: set.mm.zip
+          asset_content_type: application/zip

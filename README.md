@@ -3,16 +3,29 @@
 
 Transform metamath database to follow language.
 
-Generate the database:
+Github link: `https://github.com/follow-lang/metamath-to-follow` 
+Huggingface link: `https://huggingface.co/datasets/Follow-Lang/set.mm`
+
+## How to use it?
+
+- Generate the database:
 
 ```
 python -m src.translator -s ./set.mm/set.mm -o ./follow/set.mm/
 ```
 
+- Upload to huggingface:
+
+```
+python -m src.upload -s ./follow/set.mm -d Follow-Lang/set.mm
+```
+
+
 This command will cost about 3 hours. It will generate two forders:
 
 - `follow/set.mm/code`(425M): the data in follow language format.
 - `follow/set.mm/json`(6.3G): the data in json format.
+
 
 ## Code Folder Introduction
 

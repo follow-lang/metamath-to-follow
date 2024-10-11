@@ -10,10 +10,12 @@ packages = [{include = "metamath_to_follow"}]
 [tool.poetry.dependencies]
 python = "^3.12"
 lark = "^1.2.2"
+tqdm = "^4.66.5"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+huggingface-hub = "^0.25.2"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

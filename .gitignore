@@ -29,3 +29,5 @@ test-results/
 
 # data 数据太大了，准备尝试压缩
 follow
+
+*.zip
