@@ -788,6 +788,8 @@ if __name__ == "__main__":
     json_config_f = open(os.path.join(json_folder, "content.follow.json"), "w")
     json_config_f.write('{"content":[')
 
+    terms_f = open(os.path.join(json_folder, "terms.txt"), "w")
+
     idx = 1
 
     with open(source_file, "r") as f:
@@ -797,6 +799,8 @@ if __name__ == "__main__":
                 f_out.write(content)
             with open(os.path.join(json_folder, filename + ".json"), "w") as f_out:
                 f_out.write(trajectory)
+            if content.startswith("term "):
+                terms_f.write(content + "\n")
             if is_first:
                 follow_config_f.write(f'"{filename}.fol"')
                 json_config_f.write(f'"{filename}.json"')
@@ -809,5 +813,7 @@ if __name__ == "__main__":
     json_config_f.write("]}")
     follow_config_f.close()
     json_config_f.close()
+    terms_f.close()
     print("follow_config_f close")
     print("json_config_f close")
+    print("terms_f close")
