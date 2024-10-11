@@ -1,7 +1,7 @@
 import os
 
-from src.generate_grammar import Grammar
-from src.translator import scan, transform
+from metamath_to_follow.generate_grammar import Grammar
+from metamath_to_follow.translator import scan, transform
 
 
 def test_translator_scan():

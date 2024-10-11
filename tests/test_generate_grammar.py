@@ -1,6 +1,6 @@
 import os
 
-from src.generate_grammar import Grammar
+from metamath_to_follow.generate_grammar import Grammar
 
 
 def test_generate_grammar():

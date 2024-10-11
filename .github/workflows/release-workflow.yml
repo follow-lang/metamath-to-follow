@@ -29,13 +29,13 @@ jobs:
 
       - name: Generate Dataset
         run: |
-          poetry run python -m src.translator -s ./set.mm/set.mm -o ./follow/set.mm/
+          poetry run python -m metamath_to_follow.translator -s ./set.mm/set.mm -o ./follow/set.mm/
 
       - name: Compress Dataset And Upload to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}  # 从 GitHub Secrets 获取 Hugging Face token
         run: |
-          poetry run python -m src.upload -s ./follow/set.mm -d Follow-Lang/set.mm
+          poetry run python -m metamath_to_follow.upload -s ./follow/set.mm -d Follow-Lang/set.mm
 
       - name: Create GitHub Release
         id: create_release

@@ -8,7 +8,7 @@ import typing
 
 from lark import Lark, Tree
 
-from src.generate_grammar import Grammar, decode_label
+from metamath_to_follow.generate_grammar import Grammar, decode_label
 
 logging.basicConfig(filename="error.log", level=logging.ERROR)  # 配置日志
 
