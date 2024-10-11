@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    environment: production # 指定使用的环境
     runs-on: ubuntu-latest
 
     steps:
