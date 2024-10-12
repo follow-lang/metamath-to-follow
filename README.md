@@ -36,8 +36,11 @@ This command will create "*.zip" file and upload it to huggingface.
 ## Follow Folder Introduction
 
 - `content.follow.json`: store file list of all json files.
-- `terms.txt`: stores all term, which can be used to build tokenizer.
 - `[name].json`: stores the imformation of `[name]` block, which can be used for training.
+- `types.txt`: stores all name of types.
+- `terms.txt`: stores all term content, which can be used to build tokenizer.
+- `axioms.txt`: stores all name of axioms.
+- `thms.txt`: stores all name of thms.
 
 ### Block `type` 
 

@@ -788,7 +788,10 @@ if __name__ == "__main__":
     json_config_f = open(os.path.join(json_folder, "content.follow.json"), "w")
     json_config_f.write('{"content":[')
 
+    types_f = open(os.path.join(json_folder, "types.txt"), "w")
     terms_f = open(os.path.join(json_folder, "terms.txt"), "w")
+    axioms_f = open(os.path.join(json_folder, "axioms.txt"), "w")
+    thms_f = open(os.path.join(json_folder, "thms.txt"), "w")
 
     idx = 1
 
@@ -799,8 +802,14 @@ if __name__ == "__main__":
                 f_out.write(content)
             with open(os.path.join(json_folder, filename + ".json"), "w") as f_out:
                 f_out.write(trajectory)
-            if content.startswith("term "):
+            if content.startswith("type "):
+                types_f.write(filename + "\n")
+            elif content.startswith("term "):
                 terms_f.write(content + "\n")
+            elif content.startswith("axiom "):
+                axioms_f.write(filename + "\n")
+            elif content.startswith("thm "):
+                thms_f.write(filename + "\n")
             if is_first:
                 follow_config_f.write(f'"{filename}.fol"')
                 json_config_f.write(f'"{filename}.json"')
@@ -813,7 +822,13 @@ if __name__ == "__main__":
     json_config_f.write("]}")
     follow_config_f.close()
     json_config_f.close()
+    types_f.close()
     terms_f.close()
+    axioms_f.close()
+    thms_f.close()
     print("follow_config_f close")
     print("json_config_f close")
+    print("types_f close")
     print("terms_f close")
+    print("axioms_f close")
+    print("thms_f close")
