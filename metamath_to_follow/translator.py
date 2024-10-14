@@ -29,6 +29,8 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
             fs.add_c(props)
         elif btype == "$v":
             fs.add_v(props)
+        elif btype == "$d":
+            fs.add_d(props)
         elif btype == "$f":
             fs.add_f(*props)
             global_labels[props[0]] = ("$f", props)
@@ -135,7 +137,7 @@ def axiom_content(label, assertion, extension):
         diffcontent = ["diff"]
         for difflist in difflists:
             diffcontent.append(
-                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]), ")"
+                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
             )
         output.append(" ".join(diffcontent))
 
@@ -178,7 +180,7 @@ def thm_content(label, assertion, extension, proof, global_labels):
         diffcontent = ["diff"]
         for difflist in difflists:
             diffcontent.append(
-                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]), ")"
+                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
             )
         output.append(" ".join(diffcontent))
 
@@ -653,6 +655,7 @@ class FrameStack(list[Frame]):
             for tok in hyp
             if self.lookup_v(tok)
         }
+
         dvs = {
             (x, y)
             for fr in self
@@ -688,9 +691,9 @@ class FrameStack(list[Frame]):
         diffs_list = []
         for fr in self:
             for l in fr.diffs:
-                dvs = [v for v in l if v in f_map]
-                if dvs not in diffs_list:
-                    diffs_list.append(dvs)
+                tmp = [v for v in l if v in f_map]
+                if tmp not in diffs_list:
+                    diffs_list.append(tmp)
 
         f_labels = [self.lookup_f(f_value) for _, f_value in f_hyps]
         e_labels = [self.lookup_e(stmt) for stmt in e_hyps]
