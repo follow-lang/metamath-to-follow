@@ -144,7 +144,7 @@ def axiom_content(label, assertion, extension):
         "type": "axiom",
         "label": label,
         "args": args,
-        "target": new_stmt,
+        "target": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
     }
@@ -203,7 +203,7 @@ def thm_content(label, assertion, extension, proof, global_labels):
         "type": "thm",
         "label": label,
         "args": args,
-        "target": new_stmt,
+        "target": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
         "states": states,
