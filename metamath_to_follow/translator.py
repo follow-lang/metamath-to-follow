@@ -230,7 +230,13 @@ def generate_state(init_target, init_assumptions, init_dvs, actions):
         if a_stmt not in cur_state:
             continue
         for d in a_dvs:
-            if d not in init_dvs:
+            if d[0] == d[1]:
+                continue
+            if (
+                d[0] not in global_variables
+                and d[1] not in global_variables
+                and d not in init_dvs
+            ):
                 continue
         cur_state.remove(a_stmt)
         for ehyp in a_ehyps:
@@ -321,10 +327,19 @@ def transform_proof(proof, global_labels, argument_alias_map):
     return output[::-1], output_actions[::-1], output_costs[::-1]
 
 
+# 不是很好的解决方案
+
+global_variables = set()
+for t in ["wff", "setvar", "class"]:
+    for idx in range(100):
+        global_variables.add(f"g{t[0]}{idx}")
+
+
 def stmt_subs(stmt, ehyps, dvs, arg_map, argument_alias_map):
     values = set(argument_alias_map.values())
     arg_value_map = {
-        k: set([word for word in expr if word in values]) for k, expr in arg_map.items()
+        k: set([word for word in expr if word in values or word in global_variables])
+        for k, expr in arg_map.items()
     }
     new_stmt = "".join([arg_map.get(word, word) for word in stmt])
     new_ehyps = ["".join([arg_map.get(word, word) for word in ehyp]) for ehyp in ehyps]
