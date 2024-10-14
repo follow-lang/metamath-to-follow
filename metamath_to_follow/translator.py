@@ -4,6 +4,7 @@ import itertools
 import json
 import logging  # 添加日志模块
 import os
+import re
 import typing
 
 from lark import Lark, Tree
@@ -337,10 +338,25 @@ for t in ["wff", "setvar", "class"]:
         global_variables.add(f"g{t[0]}{idx}")
 
 
+def tokenize(code: str) -> list[str]:
+    # 使用正则表达式匹配括号和逗号分隔的语法单元
+    pattern = r"\s+|[()]|,|[^\s(),]+"  # 匹配空格、括号、逗号，或非空白字符
+    tokens = re.findall(pattern, code)
+    # 去除空格，但保留其他符号
+    tokens = [token for token in tokens if not token.isspace()]
+    return tokens
+
+
 def stmt_subs(stmt, ehyps, dvs, arg_map, argument_alias_map):
     values = set(argument_alias_map.values())
     arg_value_map = {
-        k: set([word for word in expr if word in values or word in global_variables])
+        k: set(
+            [
+                word
+                for word in tokenize(expr)
+                if word in values or word in global_variables
+            ]
+        )
         for k, expr in arg_map.items()
     }
     new_stmt = "".join([arg_map.get(word, word) for word in stmt])
