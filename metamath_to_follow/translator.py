@@ -349,24 +349,25 @@ def tokenize(code: str) -> list[str]:
 
 def stmt_subs(stmt, ehyps, dvs, arg_map, argument_alias_map):
     values = set(argument_alias_map.values())
-    arg_value_map = {
-        k: set(
-            [
-                word
-                for word in tokenize(expr)
-                if word in values or word in global_variables
-            ]
-        )
-        for k, expr in arg_map.items()
-    }
     new_stmt = "".join([arg_map.get(word, word) for word in stmt])
     new_ehyps = ["".join([arg_map.get(word, word) for word in ehyp]) for ehyp in ehyps]
     new_diffs = set()
-    for v1, v2 in dvs:
-        v1set = arg_value_map.get(v1)
-        v2set = arg_value_map.get(v2)
-        for x, y in itertools.product(v1set, v2set):
-            new_diffs.add((min(x, y), max(x, y)))
+    if len(dvs) > 0:
+        arg_value_map = {
+            k: set(
+                [
+                    word
+                    for word in tokenize(expr)
+                    if word in values or word in global_variables
+                ]
+            )
+            for k, expr in arg_map.items()
+        }
+        for v1, v2 in dvs:
+            v1set = arg_value_map.get(v1)
+            v2set = arg_value_map.get(v2)
+            for x, y in itertools.product(v1set, v2set):
+                new_diffs.add((min(x, y), max(x, y)))
     return new_stmt, new_ehyps, new_diffs
 
 
