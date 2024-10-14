@@ -70,7 +70,7 @@ This command will create "*.zip" file and upload it to huggingface.
     "type": "axiom",
     "label": <LABEL>,
     "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
-    "target": [<STMT SEQUENCE>],
+    "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V1>, <V2>), (<V3>, <V4>), ...],
 }
@@ -83,7 +83,7 @@ This command will create "*.zip" file and upload it to huggingface.
     "type": "thm",
     "label": <LABEL>,
     "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
-    "target": [<STMT SEQUENCE>],
+    "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V>, <V>), (<V>, <V>), ...],
     "states": [<STATE>, <STATE>, ...],
@@ -92,6 +92,6 @@ This command will create "*.zip" file and upload it to huggingface.
 }
 ```
 
-- `<STATE>` is combined with target statements and diff statements.
+- `<STATE>` is combined with target statements.
 - `<ACTION>` is combined with target statements, assumptions and diff statements.
 - `<OP>` is a function call of axiom or theorem.

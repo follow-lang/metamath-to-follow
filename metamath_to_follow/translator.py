@@ -145,7 +145,7 @@ def axiom_content(label, assertion, extension):
         "type": "axiom",
         "label": label,
         "args": args,
-        "target": [new_stmt],
+        "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
     }
@@ -207,7 +207,7 @@ def thm_content(label, assertion, extension, proof, global_labels):
         "type": "thm",
         "label": label,
         "args": args,
-        "target": [new_stmt],
+        "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
         "states": states,
@@ -229,13 +229,13 @@ def generate_state(init_target, init_assumptions, init_dvs, actions):
         a_stmt = a_stmts[0]  # metamath 里的命题都只有1个target
         if a_stmt not in cur_state:
             continue
+        for d in a_dvs:
+            if d not in init_dvs:
+                continue
         cur_state.remove(a_stmt)
         for ehyp in a_ehyps:
             if ehyp not in init_assumptions:
                 cur_state.append(ehyp)
-        for d in a_dvs:
-            if d not in init_dvs:
-                cur_state.append(f"diff ({d[0]},{d[1]})")
         output_state.append([*cur_state])
     return output_state
 
