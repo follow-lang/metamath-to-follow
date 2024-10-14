@@ -11,6 +11,8 @@ packages = [{include = "metamath_to_follow"}]
 python = "^3.12"
 lark = "^1.2.2"
 tqdm = "^4.66.5"
+ipykernel = "^6.29.5"
+matplotlib = "^3.9.2"
 
 
 [tool.poetry.group.dev.dependencies]

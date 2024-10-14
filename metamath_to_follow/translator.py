@@ -69,9 +69,10 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
                     yield (props[1], content, trajectory)
                 # 不需要content
             else:
-                content, trajectory = thm_content(
+                content, trajectory, cost = thm_content(
                     label, assertion, extension, proof, global_labels
                 )
+                extension[8] = cost
                 if content is not None:
                     yield (label, content, trajectory)
 
@@ -112,8 +113,8 @@ def axiom_content(label, assertion, extension):
     arguments = extension[1]
     argument_type_map = extension[2]
     argument_alias_map = extension[3]
-    ext_e_hyps = extension[-2]
-    ext_stmt = extension[-1]
+    ext_e_hyps = extension[6]
+    ext_stmt = extension[7]
     difflists = extension[0]
     dvs = assertion[0]
 
@@ -156,8 +157,8 @@ def thm_content(label, assertion, extension, proof, global_labels):
     arguments = extension[1]
     argument_type_map = extension[2]
     argument_alias_map = extension[3]
-    ext_e_hyps = extension[-2]
-    ext_stmt = extension[-1]
+    ext_e_hyps = extension[6]
+    ext_stmt = extension[7]
     difflists = extension[0]
 
     dvs = assertion[0]
@@ -183,13 +184,16 @@ def thm_content(label, assertion, extension, proof, global_labels):
 
     output.append("} = {")
 
-    new_proof, actions = transform_proof(proof, global_labels, argument_alias_map)
+    new_proof, actions, costs = transform_proof(
+        proof, global_labels, argument_alias_map
+    )
     states = generate_state(new_stmt, new_ehyps, new_dvs, actions)
+    cost = sum(costs)
 
     if len(new_proof) == 0:
         # 排除没有证明的proof
         print(label, "invalid proof")
-        return None, None
+        return None, None, None
 
     # 在适当的位置添加日志记录
     if len(states[-1]) != 0:
@@ -211,15 +215,18 @@ def thm_content(label, assertion, extension, proof, global_labels):
             (a_stmt, a_ehyps, list(a_dvs)) for a_stmt, a_ehyps, a_dvs in actions
         ],
         "operators": new_proof,
+        "costs": costs,
+        "cost": cost,
     }
 
-    return "\n".join(output), json.dumps(trajectory)
+    return "\n".join(output), json.dumps(trajectory), cost
 
 
 def generate_state(init_target, init_assumptions, init_dvs, actions):
     output_state = [[init_target]]
     cur_state = [init_target]
-    for a_stmt, a_ehyps, a_dvs in actions:
+    for a_stmts, a_ehyps, a_dvs in actions:
+        a_stmt = a_stmts[0]  # metamath 里的命题都只有1个target
         if a_stmt not in cur_state:
             continue
         cur_state.remove(a_stmt)
@@ -239,6 +246,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
     global_type_idx_record = {}
     global_argument_alias_map: dict[str, str] = {}
     output_actions = []
+    output_costs = []
     for label in proof:
         btype, props = global_labels[label]
         if btype == "$f":
@@ -258,7 +266,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
                 stack.append(alias)
         elif btype == "$a":
             type, (dvs, f_hyps, _, _), extension = props
-            ext_stmt = extension[-1]
+            ext_stmt = extension[7]
             argument = extension[1]
             n_args = len(f_hyps)
             args = stack[len(stack) - n_args :]
@@ -279,14 +287,15 @@ def transform_proof(proof, global_labels, argument_alias_map):
                 new_args = [arg_map[value] for value in argument]
                 output.append(label + "(" + ",".join(new_args) + ")")
                 # 压入 output_action_state，由 (action, state)
-                ext_ehyps = extension[-2]
+                ext_ehyps = extension[6]
                 new_stmt, new_ehyps, new_dvs = stmt_subs(
                     ext_stmt, ext_ehyps, dvs, arg_map, argument_alias_map
                 )
-                output_actions.append((new_stmt, new_ehyps, new_dvs))
+                output_actions.append(([new_stmt], new_ehyps, new_dvs))
+                output_costs.append(1)
         elif btype == "$p":
             type, (dvs, f_hyps, _, _), extension = props
-            ext_stmt = extension[-1]
+            ext_stmt = extension[7]
             argument = extension[1]
             n_args = len(f_hyps)
             if n_args > len(stack):
@@ -299,15 +308,17 @@ def transform_proof(proof, global_labels, argument_alias_map):
             new_args = [arg_map[value] for value in argument]
             output.append(label + "(" + ",".join(new_args) + ")")
             # 压入 output_action_state，由 (action, state)
-            ext_ehyps = extension[-2]
+            ext_ehyps = extension[6]
             new_stmt, new_ehyps, new_dvs = stmt_subs(
                 ext_stmt, ext_ehyps, dvs, arg_map, argument_alias_map
             )
             if type != "|-":
                 stack.append(new_stmt)
             else:
-                output_actions.append((new_stmt, new_ehyps, new_dvs))
-    return output[::-1], output_actions[::-1]
+                output_actions.append(([new_stmt], new_ehyps, new_dvs))
+                cost = extension[8]
+                output_costs.append(cost)
+    return output[::-1], output_actions[::-1], output_costs[::-1]
 
 
 def stmt_subs(stmt, ehyps, dvs, arg_map, argument_alias_map):
@@ -330,7 +341,8 @@ def decompress_proof(assertion, extension, proof, global_labels):
     if proof[0] != "(":  # not compressed proof
         return proof
 
-    _, _, _, _, f_labels, e_labels, _, _ = extension
+    f_labels = extension[4]
+    e_labels = extension[5]
 
     labels = f_labels + e_labels
     hyp_end = len(labels)
@@ -694,7 +706,7 @@ class FrameStack(list[Frame]):
         )
 
         assertion = dvs, f_hyps, e_hyps, stmt
-        extension = (
+        extension = [
             diffs_list,
             arguments,
             f_map,  # (value, type)
@@ -703,7 +715,8 @@ class FrameStack(list[Frame]):
             e_labels,
             ext_e_hyps,
             ext_stmt,
-        )
+            1,  # cost
+        ]
         return assertion, extension
 
 
