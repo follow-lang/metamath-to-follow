@@ -265,7 +265,7 @@ def thm_content(label, assertion, extension, proof, global_labels):
         return None, None, None
 
     for label, args in new_proof:
-        stmt = " ".join(label, "(", " , ".join(args), ")")
+        stmt = " ".join([label, "(", " , ".join(args), ")"])
         output.append("  " + pretty_stmt(stmt))
     output.append("}")
 
