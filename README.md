@@ -97,4 +97,4 @@ This command will create "*.zip" file and upload it to huggingface.
 
 - `<STATE>` is combined with target statements.
 - `<ACTION>` is combined with target statements, assumptions and diff statements.
-- `<OP>` is a function call of axiom or theorem.
+- `<OP>` is a function call of axiom or theorem, `<OP> = [<LABEL>, [<ARG>, <ARG>, ...]]`.

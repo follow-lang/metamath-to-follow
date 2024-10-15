@@ -256,7 +256,7 @@ def thm_content(label, assertion, extension, proof, global_labels):
 
     # 排除没有证明的proof
     if len(new_proof) == 0:
-        logging.warning("无证明", label)
+        print("无证明", label)
         return None, None, None
 
     # 在适当的位置添加日志记录
@@ -383,7 +383,6 @@ def transform_proof(proof, global_labels, argument_alias_map):
             arg_map = {f_value: args[idx] for idx, (_, f_value) in enumerate(f_hyps)}
             op = " ".join([arg_map.get(tok, tok) for tok in ext_stmt])
             new_args = [arg_map[value] for value in argument]
-            output.append((label, new_args))
             # 压入 output_action_state，由 (action, state)
             ext_ehyps = extension[6]
             new_stmt, new_ehyps, new_dvs = stmt_subs(
@@ -392,6 +391,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
             if type != "|-":
                 stack.append(new_stmt)
             else:
+                output.append((label, new_args))
                 output_actions.append(([new_stmt], new_ehyps, new_dvs))
     return output[::-1], output_actions[::-1]
 
