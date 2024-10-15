@@ -21,6 +21,10 @@ This command will cost about 3 hours. It will generate these:
 - `follow/set.mm/train`: the training data for language model.
 - `follow/set.mm/filelist.txt`: file names in train folder.
 - `follow/set.mm/words.txt`: words used in train folder.
+- `follow/set.mm/types.txt`: stores all name of types.
+- `follow/set.mm/terms.txt`: stores all term content, which can be used to build tokenizer.
+- `follow/set.mm/axioms.txt`: stores all name of axioms.
+- `follow/set.mm/thms.txt`: stores all name of thms.
 
 2. Upload to huggingface:
 
@@ -40,10 +44,6 @@ This command will create "*.zip" file and upload it to huggingface.
 
 - `content.follow.json`: store file list of all json files.
 - `[name].json`: stores the imformation of `[name]` block, which can be used for training.
-- `types.txt`: stores all name of types.
-- `terms.txt`: stores all term content, which can be used to build tokenizer.
-- `axioms.txt`: stores all name of axioms.
-- `thms.txt`: stores all name of thms.
 
 ### Block `type` 
 

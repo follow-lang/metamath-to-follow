@@ -894,10 +894,10 @@ if __name__ == "__main__":
     json_config_f = open(os.path.join(json_folder, "content.follow.json"), "w")
     json_config_f.write('{"content":[')
 
-    types_f = open(os.path.join(json_folder, "types.txt"), "w")
-    terms_f = open(os.path.join(json_folder, "terms.txt"), "w")
-    axioms_f = open(os.path.join(json_folder, "axioms.txt"), "w")
-    thms_f = open(os.path.join(json_folder, "thms.txt"), "w")
+    types_f = open(os.path.join(output_folder, "types.txt"), "w")
+    terms_f = open(os.path.join(output_folder, "terms.txt"), "w")
+    axioms_f = open(os.path.join(output_folder, "axioms.txt"), "w")
+    thms_f = open(os.path.join(output_folder, "thms.txt"), "w")
 
     train_folder = os.path.join(path, "train")
     if not os.path.exists(train_folder):
