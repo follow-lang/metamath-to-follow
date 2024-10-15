@@ -14,10 +14,13 @@ Transform metamath database to follow language.
 python -m metamath_to_follow.translator -s ./set.mm/set.mm -o ./follow/set.mm/
 ```
 
-This command will cost about 3 hours. It will generate two forders:
+This command will cost about 3 hours. It will generate these:
 
 - `follow/set.mm/code`(425M): the data in follow language format.
 - `follow/set.mm/json`(6.3G): the data in json format.
+- `follow/set.mm/train`: the training data for language model.
+- `follow/set.mm/filelist.txt`: file names in train folder.
+- `follow/set.mm/words.txt`: words used in train folder.
 
 2. Upload to huggingface:
 
