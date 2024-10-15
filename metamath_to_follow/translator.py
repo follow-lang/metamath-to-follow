@@ -4,7 +4,6 @@ import itertools
 import json
 import logging  # 添加日志模块
 import os
-import re
 import typing
 
 from lark import Lark, Tree
@@ -37,15 +36,15 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
             global_labels[props[0]] = ("$f", props)
             if props[1] not in types:
                 types.add(props[1])
-                content, trajectory = type_content(props[1])
-                yield (props[1], content, trajectory)
+                content, trajectory, train_data = type_content(props[1])
+                yield (props[1], content, trajectory, train_data)
         elif btype == "$e":
             fs.add_e(*props)
             global_labels[props[0]] = ("$e", props)
             if props[1] not in types:
                 types.add(props[1])
-                content, trajectory = type_content(props[1])
-                yield (props[1], content, trajectory)
+                content, trajectory, train_data = type_content(props[1])
+                yield (props[1], content, trajectory, train_data)
         elif btype == "$a":
             label, type, stmt = props
             assertion, extension = fs.make_assertion(stmt, grammar, types)
@@ -53,13 +52,17 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
             if props[1] != "|-":
                 if props[1] not in types:
                     types.add(props[1])
-                    content, trajectory = type_content(props[1])
-                    yield (props[1], content, trajectory)
-                content, trajectory = term_content(label, type, stmt, extension)
-                yield (label, content, trajectory)
+                    content, trajectory, train_data = type_content(props[1])
+                    yield (props[1], content, trajectory, train_data)
+                content, trajectory, train_data = term_content(
+                    label, type, stmt, extension
+                )
+                yield (label, content, trajectory, train_data)
             else:
-                content, trajectory = axiom_content(label, assertion, extension)
-                yield (label, content, trajectory)
+                content, trajectory, train_data = axiom_content(
+                    label, assertion, extension
+                )
+                yield (label, content, trajectory, train_data)
         elif btype == "$p":
             label, type, stmt, proof = props
             assertion, extension = fs.make_assertion(stmt, grammar, types)
@@ -68,16 +71,15 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
             if props[1] != "|-":
                 if props[1] not in types:
                     types.add(props[1])
-                    content, trajectory = type_content(props[1])
-                    yield (props[1], content, trajectory)
+                    content, trajectory, train_data = type_content(props[1])
+                    yield (props[1], content, trajectory, train_data)
                 # 不需要content
             else:
-                content, trajectory, cost = thm_content(
+                content, trajectory, train_data = thm_content(
                     label, assertion, extension, proof, global_labels
                 )
-                extension[8] = cost
                 if content is not None:
-                    yield (label, content, trajectory)
+                    yield (label, content, trajectory, train_data)
 
 
 def type_content(type):
@@ -86,7 +88,7 @@ def type_content(type):
         output.append(f"term {type} g{type[0]}{idx}")
 
     trajectory = {"type": "type", "label": type}
-    return "\n".join(output), json.dumps(trajectory)
+    return "\n".join(output), json.dumps(trajectory), None
 
 
 def term_content(label, type, stmt, extension):
@@ -98,7 +100,7 @@ def term_content(label, type, stmt, extension):
         args.append(argument_type_map[value] + " " + argument_alias_map[value])
     new_stmt = [argument_alias_map.get(tok, tok) for tok in stmt]
     if len(args) > 0:
-        output = ["term", type, label + "(" + ",".join(args) + ")", "{", *new_stmt, "}"]
+        output = ["term", type, label, "(", " , ".join(args), ")", "{", *new_stmt, "}"]
     else:
         output = ["term", type, label, "{", *new_stmt, "}"]
     trajectory = {
@@ -109,7 +111,67 @@ def term_content(label, type, stmt, extension):
         "stmt": " ".join(new_stmt),
     }
 
-    return " ".join(output), json.dumps(trajectory)
+    return " ".join(output), json.dumps(trajectory), None
+
+
+def pretty_stmt(stmt: str):
+    return (
+        stmt.replace(" ( ", "(")
+        .replace(" ) ", ")")
+        .replace("( ", "(")
+        .replace(" )", ")")
+        .replace(" , ", ", ")
+    )
+
+
+def get_block_train_data(targets, conditions, dvs, tails=[]):
+    rst = []
+    for target in targets:
+        rst.append("|- " + target)
+    for condition in conditions:
+        rst.append("-| " + condition)
+    if dvs and len(dvs) > 0:
+        rst.append("diff")
+        for dv in dvs:
+            rst.append(" ".join(["(", dv[0], ",", dv[1], ")"]))
+    rst += tails
+    rst.append("<end>")
+    return " ".join(rst)
+
+
+def get_axiom_train_data(axiom):
+    rst = get_block_train_data(axiom["targets"], axiom["conditions"], axiom["dvs"])
+    rst += " <qed>"
+    return rst
+
+
+def get_thm_train_data(thm):
+    tails = []
+    for condition in thm["conditions"]:
+        tails.append("-| " + condition)
+
+    dvs = thm["dvs"]
+    if len(dvs) > 0:
+        tails.append("diff")
+        for dv in dvs:
+            tails.append(f"( {dv[0]} , {dv[1]} )")
+    states = thm["states"]
+    actions = thm["actions"]
+    memories = []
+    for idx in range(len(actions)):
+        state = states[idx]
+        state_tokens = get_block_train_data(state, [], [], tails)
+
+        a_targets, a_conditions, a_dvs = actions[idx]
+        action_tokens = get_block_train_data(a_targets, a_conditions, a_dvs)
+
+        next_state = states[idx + 1]
+        if len(next_state) > 0:
+            next_state_tokens = get_block_train_data(next_state, [], [], tails)
+            memories.append(" ".join([state_tokens, action_tokens, next_state_tokens]))
+        else:
+            memories.append(" ".join([state_tokens, action_tokens, "<qed>"]))
+    return "\n".join(memories)
 
 
 def axiom_content(label, assertion, extension):
@@ -124,21 +186,21 @@ def axiom_content(label, assertion, extension):
     args = []
     for value in arguments:
         args.append(argument_type_map[value] + " " + argument_alias_map[value])
-    head = " ".join(["axiom", label + "(" + ",".join(args) + ")", "{"])
+    head = " ".join(["axiom", label + "(" + ", ".join(args) + ")", "{"])
     output = [head]
 
     new_stmt, new_ehyps, new_dvs = stmt_subs(
         ext_stmt, ext_e_hyps, dvs, argument_alias_map, argument_alias_map
     )
-    output.append("|- " + new_stmt)
+    output.append("|- " + pretty_stmt(new_stmt))
     for ehyp in new_ehyps:
-        output.append("-| " + ehyp)
+        output.append("-| " + pretty_stmt(ehyp))
 
     if len(difflists) > 0:
         diffcontent = ["diff"]
         for difflist in difflists:
             diffcontent.append(
-                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
+                "(" + ", ".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
             )
         output.append(" ".join(diffcontent))
 
@@ -147,13 +209,15 @@ def axiom_content(label, assertion, extension):
     trajectory = {
         "type": "axiom",
         "label": label,
-        "args": args,
+        "args": [arg.split(" ") for arg in args],
         "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
     }
 
-    return "\n".join(output), json.dumps(trajectory)
+    train_data = get_axiom_train_data(trajectory)
+
+    return "\n".join(output), json.dumps(trajectory), train_data
 
 
 def thm_content(label, assertion, extension, proof, global_labels):
@@ -169,47 +233,46 @@ def thm_content(label, assertion, extension, proof, global_labels):
     args = []
     for value in arguments:
         args.append(argument_type_map[value] + " " + argument_alias_map[value])
-    head = " ".join(["thm", label + "(" + ",".join(args) + ")", "{"])
+    head = " ".join(["thm", label + "(" + ", ".join(args) + ")", "{"])
     output = [head]
     new_stmt, new_ehyps, new_dvs = stmt_subs(
         ext_stmt, ext_e_hyps, dvs, argument_alias_map, argument_alias_map
     )
-    output.append("|- " + new_stmt)
+    output.append("|- " + pretty_stmt(new_stmt))
     for ehyp in new_ehyps:
-        output.append("-| " + ehyp)
+        output.append("-| " + pretty_stmt(ehyp))
     if len(difflists) > 0:
         diffcontent = ["diff"]
         for difflist in difflists:
             diffcontent.append(
-                "(" + ",".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
+                "(" + ", ".join([argument_alias_map.get(v, v) for v in difflist]) + ")"
             )
         output.append(" ".join(diffcontent))
 
     output.append("} = {")
 
-    new_proof, actions, costs = transform_proof(
-        proof, global_labels, argument_alias_map
-    )
+    new_proof, actions = transform_proof(proof, global_labels, argument_alias_map)
     states = generate_state(new_stmt, new_ehyps, new_dvs, actions)
-    cost = sum(costs)
 
+    # 排除没有证明的proof
     if len(new_proof) == 0:
-        # 排除没有证明的proof
-        print(label, "invalid proof")
+        logging.warning("无证明", label)
         return None, None, None
 
     # 在适当的位置添加日志记录
     if len(states[-1]) != 0:
-        logging.error("证明异常", label)  # 记录错误信息
+        logging.warning("证明异常", label)  # 记录错误信息
+        return None, None, None
 
-    for op in new_proof:
-        output.append("  " + op)
+    for label, args in new_proof:
+        stmt = " ".join([label, "(", " , ".join(args), ")"])
+        output.append("  " + pretty_stmt(stmt))
     output.append("}")
 
     trajectory = {
         "type": "thm",
         "label": label,
-        "args": args,
+        "args": [arg.split(" ") for arg in args],
         "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
@@ -218,11 +281,11 @@ def thm_content(label, assertion, extension, proof, global_labels):
             (a_stmt, a_ehyps, list(a_dvs)) for a_stmt, a_ehyps, a_dvs in actions
         ],
         "operators": new_proof,
-        "costs": costs,
-        "cost": cost,
     }
 
-    return "\n".join(output), json.dumps(trajectory), cost
+    train_data = get_thm_train_data(trajectory)
+
+    return "\n".join(output), json.dumps(trajectory), train_data
 
 
 def generate_state(init_target, init_assumptions, init_dvs, actions):
@@ -231,16 +294,23 @@ def generate_state(init_target, init_assumptions, init_dvs, actions):
     for a_stmts, a_ehyps, a_dvs in actions:
         a_stmt = a_stmts[0]  # metamath 里的命题都只有1个target
         if a_stmt not in cur_state:
+            output_state.append([*cur_state])
             continue
+        invalid_diff_condition = False
         for d in a_dvs:
             if d[0] == d[1]:
-                continue
+                invalid_diff_condition = True
+                break
             if (
                 d[0] not in global_variables
                 and d[1] not in global_variables
                 and d not in init_dvs
             ):
-                continue
+                invalid_diff_condition = True
+                break
+        if invalid_diff_condition:
+            output_state.append([*cur_state])
+            continue
         cur_state.remove(a_stmt)
         for ehyp in a_ehyps:
             if ehyp not in init_assumptions:
@@ -255,7 +325,6 @@ def transform_proof(proof, global_labels, argument_alias_map):
     global_type_idx_record = {}
     global_argument_alias_map: dict[str, str] = {}
     output_actions = []
-    output_costs = []
     for label in proof:
         btype, props = global_labels[label]
         if btype == "$f":
@@ -287,21 +356,20 @@ def transform_proof(proof, global_labels, argument_alias_map):
             if type != "|-":
                 if len(argument) > 0:
                     new_args = [arg_map[value] for value in argument]
-                    op = label + "(" + ",".join(new_args) + ")"
+                    op = " ".join([label, "(", " , ".join(new_args), ")"])
                 else:
                     op = label
                 stack.append(op)
             else:
                 op = "".join([arg_map.get(tok, tok) for tok in ext_stmt])
                 new_args = [arg_map[value] for value in argument]
-                output.append(label + "(" + ",".join(new_args) + ")")
+                output.append((label, new_args))
                 # 压入 output_action_state，由 (action, state)
                 ext_ehyps = extension[6]
                 new_stmt, new_ehyps, new_dvs = stmt_subs(
                     ext_stmt, ext_ehyps, dvs, arg_map, argument_alias_map
                 )
                 output_actions.append(([new_stmt], new_ehyps, new_dvs))
-                output_costs.append(1)
         elif btype == "$p":
             type, (dvs, f_hyps, _, _), extension = props
             ext_stmt = extension[7]
@@ -313,9 +381,9 @@ def transform_proof(proof, global_labels, argument_alias_map):
             args = stack[len(stack) - n_args :]
             del stack[len(stack) - n_args :]
             arg_map = {f_value: args[idx] for idx, (_, f_value) in enumerate(f_hyps)}
-            op = "".join([arg_map.get(tok, tok) for tok in ext_stmt])
+            op = " ".join([arg_map.get(tok, tok) for tok in ext_stmt])
             new_args = [arg_map[value] for value in argument]
-            output.append(label + "(" + ",".join(new_args) + ")")
+            output.append((label, new_args))
             # 压入 output_action_state，由 (action, state)
             ext_ehyps = extension[6]
             new_stmt, new_ehyps, new_dvs = stmt_subs(
@@ -325,12 +393,8 @@ def transform_proof(proof, global_labels, argument_alias_map):
                 stack.append(new_stmt)
             else:
                 output_actions.append(([new_stmt], new_ehyps, new_dvs))
-                cost = extension[8]
-                output_costs.append(cost)
-    return output[::-1], output_actions[::-1], output_costs[::-1]
+    return output[::-1], output_actions[::-1]
 
-
-# 不是很好的解决方案
 
 global_variables = set()
 for t in ["wff", "setvar", "class"]:
@@ -339,18 +403,13 @@ for t in ["wff", "setvar", "class"]:
 
 
 def tokenize(code: str) -> list[str]:
-    # 使用正则表达式匹配括号和逗号分隔的语法单元
-    pattern = r"\s+|[()]|,|[^\s(),]+"  # 匹配空格、括号、逗号，或非空白字符
-    tokens = re.findall(pattern, code)
-    # 去除空格，但保留其他符号
-    tokens = [token for token in tokens if not token.isspace()]
-    return tokens
+    return code.split(" ")
 
 
 def stmt_subs(stmt, ehyps, dvs, arg_map, argument_alias_map):
     values = set(argument_alias_map.values())
-    new_stmt = "".join([arg_map.get(word, word) for word in stmt])
-    new_ehyps = ["".join([arg_map.get(word, word) for word in ehyp]) for ehyp in ehyps]
+    new_stmt = " ".join([arg_map.get(word, word) for word in stmt])
+    new_ehyps = [" ".join([arg_map.get(word, word) for word in ehyp]) for ehyp in ehyps]
     new_diffs = set()
     if len(dvs) > 0:
         arg_value_map = {
@@ -750,7 +809,6 @@ class FrameStack(list[Frame]):
             e_labels,
             ext_e_hyps,
             ext_stmt,
-            1,  # cost
         ]
         return assertion, extension
 
@@ -836,15 +894,25 @@ if __name__ == "__main__":
     json_config_f = open(os.path.join(json_folder, "content.follow.json"), "w")
     json_config_f.write('{"content":[')
 
-    types_f = open(os.path.join(json_folder, "types.txt"), "w")
-    terms_f = open(os.path.join(json_folder, "terms.txt"), "w")
-    axioms_f = open(os.path.join(json_folder, "axioms.txt"), "w")
-    thms_f = open(os.path.join(json_folder, "thms.txt"), "w")
+    types_f = open(os.path.join(output_folder, "types.txt"), "w")
+    terms_f = open(os.path.join(output_folder, "terms.txt"), "w")
+    axioms_f = open(os.path.join(output_folder, "axioms.txt"), "w")
+    thms_f = open(os.path.join(output_folder, "thms.txt"), "w")
+
+    train_folder = os.path.join(path, "train")
+    if not os.path.exists(train_folder):
+        os.makedirs(train_folder)
+
+    filelist_f = open(os.path.join(output_folder, "filelist.txt"), "w")
+    wordlist_f = open(os.path.join(output_folder, "words.txt"), "w")
+
+    for word in ["|-", "-|", "diff", "<end>", "<qed>", ",", "(", ")"]:
+        wordlist_f.write(word + "\n")
 
     idx = 1
 
     with open(source_file, "r") as f:
-        for filename, content, trajectory in transform(f, grammar):
+        for filename, content, trajectory, train_data in transform(f, grammar):
             print(f"{idx}: {filename}")
             with open(os.path.join(follow_folder, filename + ".fol"), "w") as f_out:
                 f_out.write(content)
@@ -854,10 +922,17 @@ if __name__ == "__main__":
                 types_f.write(filename + "\n")
             elif content.startswith("term "):
                 terms_f.write(content + "\n")
+                wordlist_f.write(filename + "\n")
             elif content.startswith("axiom "):
                 axioms_f.write(filename + "\n")
+                filelist_f.write(filename + "\n")
+                with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
+                    f_out.write(train_data)
             elif content.startswith("thm "):
                 thms_f.write(filename + "\n")
+                filelist_f.write(filename + "\n")
+                with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
+                    f_out.write(train_data)
             if is_first:
                 follow_config_f.write(f'"{filename}.fol"')
                 json_config_f.write(f'"{filename}.json"')
@@ -874,9 +949,13 @@ if __name__ == "__main__":
     terms_f.close()
     axioms_f.close()
     thms_f.close()
-    print("follow_config_f close")
-    print("json_config_f close")
-    print("types_f close")
-    print("terms_f close")
-    print("axioms_f close")
-    print("thms_f close")
+    filelist_f.close()
+    wordlist_f.close()
+    print("follow_config_f closed")
+    print("json_config_f closed")
+    print("types_f closed")
+    print("terms_f closed")
+    print("axioms_f closed")
+    print("thms_f closed")
+    print("filelist_f closed")
+    print("wordlist_f closed")

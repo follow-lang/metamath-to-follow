@@ -19,7 +19,7 @@ def test_translator_transform():
 
     with open(path, "r") as f:
         idx = 0
-        for filename, content, trajectory in transform(f, grammar):
+        for filename, content, trajectory, train_data in transform(f, grammar):
             print(f"{idx}: {filename}")
             idx += 1
     assert True

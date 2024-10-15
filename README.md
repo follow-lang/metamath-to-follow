@@ -14,10 +14,17 @@ Transform metamath database to follow language.
 python -m metamath_to_follow.translator -s ./set.mm/set.mm -o ./follow/set.mm/
 ```
 
-This command will cost about 3 hours. It will generate two forders:
+This command will cost about 3 hours. It will generate these:
 
 - `follow/set.mm/code`(425M): the data in follow language format.
 - `follow/set.mm/json`(6.3G): the data in json format.
+- `follow/set.mm/train`: the training data for language model.
+- `follow/set.mm/filelist.txt`: file names in train folder.
+- `follow/set.mm/words.txt`: words used in train folder.
+- `follow/set.mm/types.txt`: stores all name of types.
+- `follow/set.mm/terms.txt`: stores all term content, which can be used to build tokenizer.
+- `follow/set.mm/axioms.txt`: stores all name of axioms.
+- `follow/set.mm/thms.txt`: stores all name of thms.
 
 2. Upload to huggingface:
 
@@ -37,10 +44,6 @@ This command will create "*.zip" file and upload it to huggingface.
 
 - `content.follow.json`: store file list of all json files.
 - `[name].json`: stores the imformation of `[name]` block, which can be used for training.
-- `types.txt`: stores all name of types.
-- `terms.txt`: stores all term content, which can be used to build tokenizer.
-- `axioms.txt`: stores all name of axioms.
-- `thms.txt`: stores all name of thms.
 
 ### Block `type` 
 
@@ -69,7 +72,7 @@ This command will create "*.zip" file and upload it to huggingface.
 {
     "type": "axiom",
     "label": <LABEL>,
-    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "args": [[<TYPE>, <NAME>], [<TYPE>, <NAME>], ...],
     "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V1>, <V2>), (<V3>, <V4>), ...],
@@ -82,7 +85,7 @@ This command will create "*.zip" file and upload it to huggingface.
 {
     "type": "thm",
     "label": <LABEL>,
-    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "args": [[<TYPE>, <NAME>], [<TYPE>, <NAME>], ...],
     "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V>, <V>), (<V>, <V>), ...],
