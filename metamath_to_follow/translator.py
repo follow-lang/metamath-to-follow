@@ -4,6 +4,7 @@ import itertools
 import json
 import logging  # 添加日志模块
 import os
+import shutil
 import typing
 
 from lark import Lark, Tree
@@ -872,8 +873,10 @@ if __name__ == "__main__":
     output_folder = args.output_folder
 
     path = os.path.join(output_folder)
-    if not os.path.exists(path):
-        os.makedirs(path)
+    # 删除旧文件夹
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
 
     follow_folder = os.path.join(path, "code")
     if not os.path.exists(follow_folder):
@@ -899,11 +902,14 @@ if __name__ == "__main__":
     axioms_f = open(os.path.join(output_folder, "axioms.txt"), "w")
     thms_f = open(os.path.join(output_folder, "thms.txt"), "w")
 
+    """
     train_folder = os.path.join(path, "train")
     if not os.path.exists(train_folder):
         os.makedirs(train_folder)
 
     filelist_f = open(os.path.join(output_folder, "filelist.txt"), "w")
+    """
+
     wordlist_f = open(os.path.join(output_folder, "words.txt"), "w")
 
     for word in ["|-", "-|", "diff", "<end>", "<qed>", ",", "(", ")"]:
@@ -925,14 +931,18 @@ if __name__ == "__main__":
                 wordlist_f.write(filename + "\n")
             elif content.startswith("axiom "):
                 axioms_f.write(filename + "\n")
+                """
                 filelist_f.write(filename + "\n")
                 with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
                     f_out.write(train_data)
+                """
             elif content.startswith("thm "):
                 thms_f.write(filename + "\n")
+                """
                 filelist_f.write(filename + "\n")
                 with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
                     f_out.write(train_data)
+                """
             if is_first:
                 follow_config_f.write(f'"{filename}.fol"')
                 json_config_f.write(f'"{filename}.json"')
@@ -949,7 +959,7 @@ if __name__ == "__main__":
     terms_f.close()
     axioms_f.close()
     thms_f.close()
-    filelist_f.close()
+    # filelist_f.close()
     wordlist_f.close()
     print("follow_config_f closed")
     print("json_config_f closed")
@@ -957,5 +967,5 @@ if __name__ == "__main__":
     print("terms_f closed")
     print("axioms_f closed")
     print("thms_f closed")
-    print("filelist_f closed")
+    # print("filelist_f closed")
     print("wordlist_f closed")
