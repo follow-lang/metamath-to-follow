@@ -100,7 +100,7 @@ def term_content(label, type, stmt, extension):
         args.append(argument_type_map[value] + " " + argument_alias_map[value])
     new_stmt = [argument_alias_map.get(tok, tok) for tok in stmt]
     if len(args) > 0:
-        output = ["term", type, label + "(" + ",".join(args) + ")", "{", *new_stmt, "}"]
+        output = ["term", type, label, "(", " , ".join(args), ")", "{", *new_stmt, "}"]
     else:
         output = ["term", type, label, "{", *new_stmt, "}"]
     trajectory = {
@@ -209,7 +209,7 @@ def axiom_content(label, assertion, extension):
     trajectory = {
         "type": "axiom",
         "label": label,
-        "args": args,
+        "args": [arg.split(" ") for arg in args],
         "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
@@ -264,14 +264,15 @@ def thm_content(label, assertion, extension, proof, global_labels):
         logging.warning("证明异常", label)  # 记录错误信息
         return None, None, None
 
-    for op in new_proof:
-        output.append("  " + op)
+    for label, args in new_proof:
+        stmt = " ".join(label, "(", " , ".join(args), ")")
+        output.append("  " + pretty_stmt(stmt))
     output.append("}")
 
     trajectory = {
         "type": "thm",
         "label": label,
-        "args": args,
+        "args": [arg.split(" ") for arg in args],
         "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
@@ -362,7 +363,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
             else:
                 op = "".join([arg_map.get(tok, tok) for tok in ext_stmt])
                 new_args = [arg_map[value] for value in argument]
-                output.append(label + " ( " + " , ".join(new_args) + " )")
+                output.append((label, new_args))
                 # 压入 output_action_state，由 (action, state)
                 ext_ehyps = extension[6]
                 new_stmt, new_ehyps, new_dvs = stmt_subs(
@@ -382,8 +383,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
             arg_map = {f_value: args[idx] for idx, (_, f_value) in enumerate(f_hyps)}
             op = " ".join([arg_map.get(tok, tok) for tok in ext_stmt])
             new_args = [arg_map[value] for value in argument]
-            proof_op = label + " ( " + " , ".join(new_args) + " )"
-            output.append(pretty_stmt(proof_op))
+            output.append((label, new_args))
             # 压入 output_action_state，由 (action, state)
             ext_ehyps = extension[6]
             new_stmt, new_ehyps, new_dvs = stmt_subs(

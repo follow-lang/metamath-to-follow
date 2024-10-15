@@ -72,7 +72,7 @@ This command will create "*.zip" file and upload it to huggingface.
 {
     "type": "axiom",
     "label": <LABEL>,
-    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "args": [[<TYPE>, <NAME>], [<TYPE>, <NAME>], ...],
     "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V1>, <V2>), (<V3>, <V4>), ...],
@@ -85,7 +85,7 @@ This command will create "*.zip" file and upload it to huggingface.
 {
     "type": "thm",
     "label": <LABEL>,
-    "args": ["<TYPE> <NAME>", "<TYPE> <NAME>", ...],
+    "args": [[<TYPE>, <NAME>], [<TYPE>, <NAME>], ...],
     "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V>, <V>), (<V>, <V>), ...],
