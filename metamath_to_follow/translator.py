@@ -107,7 +107,7 @@ def term_content(label, type, stmt, extension):
         "type": "term",
         "label": label,
         "type": type,
-        "args": args,
+        "args": [arg.split(" ") for arg in args],
         "stmt": " ".join(new_stmt),
     }
 
@@ -264,8 +264,8 @@ def thm_content(label, assertion, extension, proof, global_labels):
         logging.warning("证明异常", label)  # 记录错误信息
         return None, None, None
 
-    for label, args in new_proof:
-        stmt = " ".join([label, "(", " , ".join(args), ")"])
+    for op, op_args in new_proof:
+        stmt = " ".join([op, "(", " , ".join(op_args), ")"])
         output.append("  " + pretty_stmt(stmt))
     output.append("}")
 
