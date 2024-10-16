@@ -81,6 +81,12 @@ def transform(file: io.TextIOWrapper, grammar: Grammar | None = None):
                 )
                 if content is not None:
                     yield (label, content, trajectory, train_data)
+                else:
+                    content, trajectory, train_data = axiom_content(
+                        label, assertion, extension
+                    )
+                    global_labels[label] = ("$a", (type, assertion, extension))
+                    yield (label, content, trajectory, train_data)
 
 
 def type_content(type):
