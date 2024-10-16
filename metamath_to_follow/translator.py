@@ -912,8 +912,13 @@ if __name__ == "__main__":
 
     wordlist_f = open(os.path.join(output_folder, "words.txt"), "w")
 
-    for word in ["|-", "-|", "diff", "<end>", "<qed>", ",", "(", ")"]:
+    for word in ["|-", "-|", "diff", "<end>", "<qed>", "<eos>", ",", "(", ")"]:
         wordlist_f.write(word + "\n")
+
+    for t in ["wff", "setvar", "class"]:
+        for idx in range(200):
+            wordlist_f.write(f"g{t[0]}{idx}\n")
+            wordlist_f.write(f"v{t[0]}{idx}\n")
 
     idx = 1
 
