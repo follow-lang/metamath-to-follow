@@ -939,7 +939,7 @@ if __name__ == "__main__":
 
     wordlist_f = open(os.path.join(output_folder, "words.txt"), "w")
 
-    for word in ["|-", "-|", "diff", "<end>", "<qed>", "<eos>", ",", "(", ")"]:
+    for word in ["|-", "-|", "diff", ",", "(", ")"]:
         wordlist_f.write(word + "\n")
 
     for t in ["wff", "setvar", "class"]:
