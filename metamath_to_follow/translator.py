@@ -220,6 +220,7 @@ def axiom_content(label, assertion, extension):
         "targets": [new_stmt],
         "conditions": new_ehyps,
         "dvs": list(new_dvs),
+        "cost": 1,
     }
 
     train_data = get_axiom_train_data(trajectory)
@@ -258,8 +259,12 @@ def thm_content(label, assertion, extension, proof, global_labels):
 
     output.append("} = {")
 
-    new_proof, actions = transform_proof(proof, global_labels, argument_alias_map)
+    new_proof, actions, thm_cost, state_costs, action_costs = transform_proof(
+        proof, global_labels, argument_alias_map
+    )
     states = generate_state(new_stmt, new_ehyps, new_dvs, actions)
+
+    extension[8] = thm_cost  # 更新cost
 
     # 排除没有证明的proof
     if len(new_proof) == 0:
@@ -288,6 +293,9 @@ def thm_content(label, assertion, extension, proof, global_labels):
             (a_stmt, a_ehyps, list(a_dvs)) for a_stmt, a_ehyps, a_dvs in actions
         ],
         "operators": new_proof,
+        "cost": thm_cost,
+        "state_costs": state_costs,
+        "action_costs": action_costs,
     }
 
     train_data = get_thm_train_data(trajectory)
@@ -332,6 +340,7 @@ def transform_proof(proof, global_labels, argument_alias_map):
     global_type_idx_record = {}
     global_argument_alias_map: dict[str, str] = {}
     output_actions = []
+    action_costs = []
     for label in proof:
         btype, props = global_labels[label]
         if btype == "$f":
@@ -377,6 +386,8 @@ def transform_proof(proof, global_labels, argument_alias_map):
                     ext_stmt, ext_ehyps, dvs, arg_map, argument_alias_map
                 )
                 output_actions.append(([new_stmt], new_ehyps, new_dvs))
+                cost = extension[8]  # should be 1
+                action_costs.append(cost)
         elif btype == "$p":
             type, (dvs, f_hyps, _, _), extension = props
             ext_stmt = extension[7]
@@ -400,7 +411,16 @@ def transform_proof(proof, global_labels, argument_alias_map):
             else:
                 output.append((label, new_args))
                 output_actions.append(([new_stmt], new_ehyps, new_dvs))
-    return output[::-1], output_actions[::-1]
+                cost = extension[8]  # should be 1
+                action_costs.append(cost)
+
+    thm_cost = 0
+    state_costs = [0]
+    for action_cost in action_costs:
+        thm_cost = max(action_cost, 1 + thm_cost)
+        state_costs.append(thm_cost)
+
+    return output[::-1], output_actions[::-1], thm_cost, state_costs, action_costs
 
 
 global_variables = set()
@@ -816,6 +836,7 @@ class FrameStack(list[Frame]):
             e_labels,
             ext_e_hyps,
             ext_stmt,
+            1,  # 8-cost
         ]
         return assertion, extension
 

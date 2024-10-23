@@ -77,6 +77,7 @@ This command will create "*.zip" file and upload it to huggingface.
     "targets": [<STMT SEQUENCE>],
     "conditions": [<STMT SEQUENCE>, <STMT SEQUENCE>, ...],
     "dvs": [(<V1>, <V2>), (<V3>, <V4>), ...],
+    "cost": 1
 }
 ```
 
@@ -92,10 +93,14 @@ This command will create "*.zip" file and upload it to huggingface.
     "dvs": [(<V>, <V>), (<V>, <V>), ...],
     "states": [<STATE>, <STATE>, ...],
     "actions": [ <ACTION>, <ACTION>, ...],
-    "operators": [ <OP>, <OP>, ...]
+    "operators": [ <OP>, <OP>, ...],
+    "cost": <COST>,
+    "state_costs": [<COST>, <COST>, ...],
+    "action_costs": [<COST>, <COST>, ...],
 }
 ```
 
 - `<STATE>` is combined with target statements.
 - `<ACTION>` is combined with target statements, assumptions and diff statements.
 - `<OP>` is a function call of axiom or theorem, `<OP> = [<LABEL>, [<ARG>, <ARG>, ...]]`.
+- `<COST>` is the max number of proof ops: `Cost(s) = max(Cost(a), Cost(s')+1)`.
