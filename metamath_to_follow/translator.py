@@ -420,7 +420,13 @@ def transform_proof(proof, global_labels, argument_alias_map):
         thm_cost = max(action_cost, 1 + thm_cost)
         state_costs.append(thm_cost)
 
-    return output[::-1], output_actions[::-1], thm_cost, state_costs, action_costs
+    return (
+        output[::-1],
+        output_actions[::-1],
+        thm_cost,
+        state_costs[::-1],
+        action_costs[::-1],
+    )
 
 
 global_variables = set()
