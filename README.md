@@ -18,10 +18,7 @@ This command will cost about 3 hours. It will generate these:
 
 - `follow/set.mm/code`(329M): the data in follow language format.
 - `follow/set.mm/json`(9.6G): the data in json format.
-- `follow/set.mm/words.txt`: words used in train folder. It includes some special token:
-    - "<end>" means the end of a block 
-    - "<qed>" means the end of a proof ([<state><end>, <action><end>, <qed>, <eos>])
-    - "<eos>" means the end of a memory ([<state><end>, <action><end>, <next_state><end>, <eos>])
+- `follow/set.mm/words.txt`: words used in train folder. It includes some special token.
 - `follow/set.mm/types.txt`: stores all name of types.
 - `follow/set.mm/terms.txt`: stores all term content, which can be used to build tokenizer.
 - `follow/set.mm/axioms.txt`: stores all name of axioms.
