@@ -48,7 +48,8 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
-        # 使用环境文件替代 set-output
+          
+      - name: Set upload URL
         run: echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
       - name: Upload ZIP file to GitHub Release
