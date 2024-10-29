@@ -934,14 +934,7 @@ if __name__ == "__main__":
     terms_f = open(os.path.join(output_folder, "terms.txt"), "w")
     axioms_f = open(os.path.join(output_folder, "axioms.txt"), "w")
     thms_f = open(os.path.join(output_folder, "thms.txt"), "w")
-
-    """
-    train_folder = os.path.join(path, "train")
-    if not os.path.exists(train_folder):
-        os.makedirs(train_folder)
-
-    filelist_f = open(os.path.join(output_folder, "filelist.txt"), "w")
-    """
+    blocks_f = open(os.path.join(output_folder, "blocks.txt"), "w")
 
     wordlist_f = open(os.path.join(output_folder, "words.txt"), "w")
 
@@ -969,18 +962,8 @@ if __name__ == "__main__":
                 wordlist_f.write(filename + "\n")
             elif content.startswith("axiom "):
                 axioms_f.write(filename + "\n")
-                """
-                filelist_f.write(filename + "\n")
-                with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
-                    f_out.write(train_data)
-                """
             elif content.startswith("thm "):
                 thms_f.write(filename + "\n")
-                """
-                filelist_f.write(filename + "\n")
-                with open(os.path.join(train_folder, filename + ".txt"), "w") as f_out:
-                    f_out.write(train_data)
-                """
             if is_first:
                 follow_config_f.write(f'"{filename}.fol"')
                 json_config_f.write(f'"{filename}.json"')
@@ -988,6 +971,7 @@ if __name__ == "__main__":
             else:
                 follow_config_f.write(f',"{filename}.fol"')
                 json_config_f.write(f',"{filename}.json"')
+            blocks_f.write(filename + "\n")
             idx += 1
     follow_config_f.write("]}")
     json_config_f.write("]}")
@@ -997,7 +981,7 @@ if __name__ == "__main__":
     terms_f.close()
     axioms_f.close()
     thms_f.close()
-    # filelist_f.close()
+    blocks_f.close()
     wordlist_f.close()
     print("follow_config_f closed")
     print("json_config_f closed")
