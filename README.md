@@ -36,6 +36,7 @@ This command will cost about 3 hours. It will generate these:
 - `follow/set.mm/terms.txt`: stores all term content, which can be used to build tokenizer.
 - `follow/set.mm/axioms.txt`: stores all name of axioms.
 - `follow/set.mm/thms.txt`: stores all name of thms.
+- `follow/set.mm/blocks.txt`: stores all name of blocks.
 
 2. Upload to huggingface:
 
