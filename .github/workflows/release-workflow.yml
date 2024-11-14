@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'  # 添加这行来初始化和更新
 
       - name: Set up Python
         uses: actions/setup-python@v4
