@@ -17,7 +17,7 @@ This version improves readability and flow while maintaining the original meanin
 Transform metamath database to follow language.
 
 - Github link: `https://github.com/follow-lang/metamath-to-follow` 
-- Huggingface link: `https://huggingface.co/datasets/Follow-Lang/set.mm`
+- Huggingface link: `https://huggingface.co/datasets/Follow-Lang/set.mm.json`
 
 ## How to use it?
 

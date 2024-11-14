@@ -36,7 +36,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}  # 从 GitHub Secrets 获取 Hugging Face token
         run: |
-          poetry run python -m metamath_to_follow.upload -s ./follow/set.mm -d Follow-Lang/set.mm
+          poetry run python -m metamath_to_follow.upload -s ./follow/set.mm -d Follow-Lang/set.mm.json
 
       - name: Create GitHub Release
         id: create_release

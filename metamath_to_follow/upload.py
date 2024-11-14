@@ -3,6 +3,7 @@ import os
 import zipfile
 
 from huggingface_hub import HfApi
+from huggingface_hub.utils import RepositoryNotFoundError
 from tqdm import tqdm
 
 
@@ -46,19 +47,42 @@ if __name__ == "__main__":
     # 上传数据集到 Hugging Face
     api = HfApi()
     repo_id = args.repo_id
-    path_in_repo = f"datasets/{folder_name}.zip"
+    path_in_repo = f"{folder_name}.zip"
+
+    try:
+        api.dataset_info(repo_id)
+        print(f"数据集 {repo_id} 已存在。")
+    except RepositoryNotFoundError:
+        print(f"数据集 {repo_id} 不存在，正在创建...")
+        api.create_repo(repo_id, repo_type="dataset")
 
     # 通过 upload_with_progress 进行直接上传
     with open(output_zip, "rb") as f:  # 以二进制模式打开文件
         # 进行上传
         try:
-            print("开始上传到Hugging Face")
+            # 上传 README.md 文件
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            readme_path = os.path.join(current_dir, "README.md")
+            if os.path.exists(readme_path):
+                print("开始上传 README.md")
+                with open(readme_path, "rb") as readme_f:
+                    api.upload_file(
+                        path_or_fileobj=readme_f,
+                        path_in_repo="README.md",
+                        repo_id=repo_id,
+                        repo_type="dataset",
+                    )
+                print("README.md 上传成功")
+            else:
+                print("未找到 README.md 文件")
+
+            print("开始上传 set.mm.zip")
             api.upload_file(
                 path_or_fileobj=f,  # 传递文件对象
                 path_in_repo=path_in_repo,
                 repo_id=repo_id,
                 repo_type="dataset",
             )
-            print("上传成功")  # 上传成功提示
+            print("set.mm.zip 上传成功")  # 上传成功提示
         except Exception as e:
             print(f"上传失败: {e}")
