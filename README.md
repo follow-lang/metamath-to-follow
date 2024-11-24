@@ -24,6 +24,7 @@ This command will cost about 3 hours. It will generate these:
 - `follow/set.mm/axioms.txt`: stores all name of axioms.
 - `follow/set.mm/thms.txt`: stores all name of thms.
 - `follow/set.mm/blocks.txt`: stores all name of blocks.
+- `follow/set.mm/book-content.txt`: store the book content of `set.mm`.
 
 2. Upload to huggingface:
 

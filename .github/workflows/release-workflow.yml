@@ -30,6 +30,10 @@ jobs:
         run: |
           poetry install  # 安装依赖
 
+      - name: Generate Book Content
+        run: |
+          poetry run python -m metamath_to_follow.parse_as_book -s ./set.mm/set.mm -o ./follow/set.mm/
+
       - name: Generate Dataset
         run: |
           poetry run python -m metamath_to_follow.translator -s ./set.mm/set.mm -o ./follow/set.mm/

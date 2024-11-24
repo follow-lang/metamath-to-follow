@@ -4,7 +4,6 @@ import itertools
 import json
 import logging  # 添加日志模块
 import os
-import shutil
 import typing
 
 from lark import Lark, Tree
@@ -906,10 +905,8 @@ if __name__ == "__main__":
     output_folder = args.output_folder
 
     path = os.path.join(output_folder)
-    # 删除旧文件夹
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    os.makedirs(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     follow_folder = os.path.join(path, "code")
     if not os.path.exists(follow_folder):

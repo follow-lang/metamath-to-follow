@@ -7,5 +7,9 @@
   "editor.tabSize": 4,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "charliermarsh.ruff",
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  // 使用 Ruff 作为默认的组织导入工具
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
 }
